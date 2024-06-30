@@ -12,20 +12,22 @@ import android_lint_reporter.util.printLog
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import java.io.File
-import java.lang.NumberFormatException
-import java.util.*
+import java.util.TreeMap
 
 open class AndroidLintReporterPluginExtension(
-        var lintFilePath: String = "",
-        var detektFilePath: String = "",
-        var githubOwner: String = "",
-        var githubRepositoryName: String = "",
-        var showLog: Boolean = false
+    var lintFilePath: String = "",
+    var detektFilePath: String = "",
+    var githubOwner: String = "",
+    var githubRepositoryName: String = "",
+    var showLog: Boolean = false
 )
 
 class AndroidLintReporterPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val extension = project.extensions.create("android_lint_reporter", AndroidLintReporterPluginExtension::class.java)
+        val extension = project.extensions.create(
+            "android_lint_reporter",
+            AndroidLintReporterPluginExtension::class.java
+        )
         project.tasks.register("report") { task ->
             task.doLast {
                 val projectProperties = project.properties
@@ -46,19 +48,21 @@ class AndroidLintReporterPlugin : Plugin<Project> {
                 //     }
                 // }
                 val service = GithubService.create(
-                        githubToken = githubToken,
-                        username = extension.githubOwner,
-                        repoName = extension.githubRepositoryName,
-                        pullRequestId = githubPullRequestId
+                    githubToken = githubToken,
+                    username = extension.githubOwner,
+                    repoName = extension.githubRepositoryName,
+                    pullRequestId = githubPullRequestId
                 )
                 val botUsername = service.getUser().execute().body()?.login
                 if (extension.lintFilePath.length > 1 && extension.lintFilePath[0] == '.') {
                     // example: this is to replace "./src/main/resources/lint-results.xml" into "<projectDir>/src/main/resources/lint-results.xml"
-                    extension.lintFilePath = "${project.projectDir.absolutePath}${extension.lintFilePath.substring(1)}"
+                    extension.lintFilePath =
+                        "${project.projectDir.absolutePath}${extension.lintFilePath.substring(1)}"
                 }
                 if (extension.detektFilePath.length > 1 && extension.detektFilePath[0] == '.') {
                     // example: this is to replace "./src/main/resources/detekt_report.xml" into "<projectDir>/src/main/resources/detekt_report.xml"
-                    extension.detektFilePath = "${project.projectDir.absolutePath}${extension.detektFilePath.substring(1)}"
+                    extension.detektFilePath =
+                        "${project.projectDir.absolutePath}${extension.detektFilePath.substring(1)}"
                 }
 
                 /* parse lint issues */
@@ -95,12 +99,14 @@ class AndroidLintReporterPlugin : Plugin<Project> {
                         val matchGroups = regex.findAll(patch)
                         val treeMap = TreeMap<Int, Int>() // line change start, how many lines
                         matchGroups.forEach { value ->
-                            treeMap[value.groupValues[3].toInt()] = value.groupValues[3].toInt() + value.groupValues[4].toInt() - 1
+                            treeMap[value.groupValues[3].toInt()] =
+                                value.groupValues[3].toInt() + value.groupValues[4].toInt() - 1
                         }
                         fileHashMap[githubPullRequestFilesResponse.filename] = treeMap
                     }
                     if (extension.showLog) {
                         printLog("----Files change in this Pull Request----")
+                        printLog("Number of files changed: ${fileHashMap.size}")
                         fileHashMap.entries.forEach { (filename, treeMap) ->
                             if (treeMap.isNotEmpty()) {
                                 val pairString = treeMap.map { (a, b) ->
@@ -113,7 +119,8 @@ class AndroidLintReporterPlugin : Plugin<Project> {
 
                     /* get all comments from a pull request */
                     // commentHashMap is used to check for duplicated comments
-                    val commentHashMap = hashMapOf<String, MutableSet<Int>>() // commentHashMap[filename] -> line number
+                    val commentHashMap =
+                        hashMapOf<String, MutableSet<Int>>() // commentHashMap[filename] -> line number
                     val commentResults = service.getPullRequestComments().execute()
                     commentResults.body()?.forEach { comment ->
                         comment.line?.let { commentLine ->
@@ -146,7 +153,11 @@ class AndroidLintReporterPlugin : Plugin<Project> {
                                 val issue = combinedIssueHashMap[lintIssueKey(filename, lintLine)]
                                 printLog("$filename:$lintLine (${issue?.reporter})")
                             }
-                            if (fileHashMap.find(filename, lintLine) && commentHashMap[filename]?.contains(lintLine) != true) {
+                            if (fileHashMap.find(
+                                    filename,
+                                    lintLine
+                                ) && commentHashMap[filename]?.contains(lintLine) != true
+                            ) {
                                 // post to github as a review comment
                                 val issue = combinedIssueHashMap[lintIssueKey(filename, lintLine)]
                                 if (extension.showLog) {
@@ -157,15 +168,19 @@ class AndroidLintReporterPlugin : Plugin<Project> {
                                         val commitResult = service.getPullRequestCommits().execute()
                                         commitResult.body()?.last()?.sha?.let { lastCommitId ->
                                             val postReviewCommitResult = service.postReviewComment(
-                                                    bodyString = Renderer.render(issue),
-                                                    lineNumber = issue.line ?: 0,
-                                                    path = issue.file.replace(projectRootDir, ""),
-                                                    commitId = lastCommitId
+                                                bodyString = Renderer.render(issue),
+                                                lineNumber = issue.line ?: 0,
+                                                path = issue.file.replace(projectRootDir, ""),
+                                                commitId = lastCommitId
                                             ).execute()
                                             if (postReviewCommitResult.isSuccessful) {
                                                 printLog("report successfully posted to Pull Request #$githubPullRequestId")
                                             } else {
-                                                printLog("Result cannot be posted due to error: ${postReviewCommitResult.errorBody()?.string()}")
+                                                printLog(
+                                                    "Result cannot be posted due to error: ${
+                                                        postReviewCommitResult.errorBody()?.string()
+                                                    }"
+                                                )
                                             }
                                         }
                                     } catch (e: Exception) {
