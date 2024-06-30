@@ -11,10 +11,10 @@ repositories {
 
 object Constant {
     val pluginName = "AndroidLintReporterPlugin"
-    val id = "com.worker8.android_lint_reporter"
+    val id = "com.vast00.android_lint_reporter"
     val implementationClass = "android_lint_reporter.AndroidLintReporterPlugin"
-    val version = "2.1.0"
-    val website = "https://github.com/worker8/AndroidLintReporter"
+    val version = "2.2.0"
+    val website = "https://github.com/vast00/AndroidLintReporter"
     val displayName = "Android Lint Reporter"
     val description = "Gradle Plugin to parse, format, report Android Lint result back to Github Pull Request using Github Actions"
     val tags = listOf("android", "lint", "github-actions")
