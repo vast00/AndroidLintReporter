@@ -1,17 +1,17 @@
 plugins {
-    `java-gradle-plugin`
-    id("com.gradle.plugin-publish") version "0.11.0"
-    id("org.jetbrains.kotlin.jvm") version "1.3.61"
-    kotlin("kapt") version "1.3.61"
+    id("com.gradle.plugin-publish") version "1.2.1"
+    kotlin("jvm") version "1.7.10"
+    kotlin("kapt") version "1.7.10"
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 object Constant {
     val pluginName = "AndroidLintReporterPlugin"
-    val id = "com.vast00.android_lint_reporter"
+    val group = "io.github.vast00"
+    val id = "io.github.vast00.android_lint_reporter"
     val implementationClass = "android_lint_reporter.AndroidLintReporterPlugin"
     val version = "2.2.0"
     val website = "https://github.com/vast00/AndroidLintReporter"
@@ -22,7 +22,7 @@ object Constant {
 
 object Version {
     val retrofit = "2.8.2"
-    val moshi = "1.9.2"
+    val moshi = "1.14.0"
 }
 
 dependencies {
@@ -64,48 +64,19 @@ val check by tasks.getting(Task::class) {
     dependsOn(functionalTest)
 }
 
+group = Constant.id
+version = Constant.version
+
 gradlePlugin {
+    website.set(Constant.website)
+    vcsUrl.set(Constant.website)
     plugins {
         create(Constant.pluginName) {
             id = Constant.id
-            implementationClass = Constant.implementationClass
-            version = Constant.version
-        }
-    }
-}
-
-pluginBundle {
-    // These settings are set for the whole plugin bundle
-    website = Constant.website
-    vcsUrl = Constant.website
-    // tags and description can be set for the whole bundle here, but can also
-    // be set / overridden in the config for specific plugins
-    //description = "Just a friendly description for my learning!"
-
-    // The plugins block can contain multiple plugin entries.
-    //
-    // The name for each plugin block below (greetingsPlugin, goodbyePlugin)
-    // does not affect the plugin configuration, but they need to be unique
-    // for each plugin.
-
-    // Plugin config blocks can set the id, displayName, version, description
-    // and tags for each plugin.
-
-    // id and displayName are mandatory.
-    // If no version is set, the project version will be used.
-    // If no tags or description are set, the tags or description from the
-    // pluginBundle block will be used, but they must be set in one of the
-    // two places.
-
-    (plugins) {
-
-        // first plugin
-        Constant.pluginName {
-            // id is captured from java-gradle-plugin configuration
-            description = Constant.description
-            tags = Constant.tags
-            version = Constant.version
             displayName = Constant.displayName
+            description = Constant.description
+            tags.set(Constant.tags)
+            implementationClass = Constant.implementationClass
         }
     }
 }
