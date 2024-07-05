@@ -62,8 +62,16 @@ class AndroidLintReporterPlugin : Plugin<Project> {
                 }
 
                 /* parse lint issues */
-                val githubIssues = Parser.parse(File(extension.lintFilePath))
-                val detektIssues = Parser.parseDetektXml(File(extension.detektFilePath))
+                val githubIssues = if (extension.lintFilePath.isNotEmpty()) {
+                    Parser.parse(File(extension.lintFilePath))
+                } else {
+                    emptyList()
+                }
+                val detektIssues = if (extension.detektFilePath.isNotEmpty()) {
+                    Parser.parseDetektXml(File(extension.detektFilePath))
+                } else {
+                    emptyList()
+                }
                 printLog("Number of Android Lint Issues: ${githubIssues.size}")
                 printLog("Number of Detekt Issues: ${detektIssues.size}")
                 val combinedLineHashMap = hashMapOf<String, MutableSet<Int>>()
